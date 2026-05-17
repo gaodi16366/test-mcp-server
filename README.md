@@ -19,7 +19,9 @@ Go to **Auth0 → APIs → Create API**:
 | Field | Value |
 |---|---|
 | Name | any (e.g. `mcp-api`) |
-| Identifier | `https://localhost/mcp` (used as JWT audience) |
+| Identifier | your public server URL (e.g. `https://xxxx.ngrok-free.app`) |
+
+> The identifier must match your `SERVER_URL` exactly. Auth0 uses it as the JWT audience, and the server validates tokens against `SERVER_URL`. Update this whenever your public URL changes.
 
 ### 2. Create a Regular Web Application
 
@@ -38,7 +40,7 @@ Enable:
 
 **APIs tab:**
 
-Authorize the app to access the API created in step 1.
+Authorize the app to access the API created in step 1. Update this each time you create a new API for a new URL.
 
 ### 3. Enable a Connection
 
@@ -53,7 +55,6 @@ Go to **Auth0 → User Management → Users → Create User** and create a user 
 - **Domain** (e.g. `your-tenant.jp.auth0.com`)
 - **Client ID**
 - **Client Secret**
-- **API Identifier** (e.g. `https://localhost/mcp`)
 
 ## Local Setup
 
@@ -84,8 +85,7 @@ Edit `.env`:
 
 ```
 AUTH0_DOMAIN=your-tenant.region.auth0.com
-AUDIENCE=https://localhost/mcp
-SERVER_URL=https://YOUR_NGROK_URL     # update each time ngrok restarts
+SERVER_URL=https://YOUR_NGROK_URL
 PORT=3000
 ```
 
@@ -123,6 +123,5 @@ Once connected, ask Claude:
 
 ## Notes
 
-- The ngrok URL changes on every restart — update `SERVER_URL` in `.env` and reconnect the Claude connector each time
+- When the ngrok URL changes, update `SERVER_URL` in `.env`, create a new Auth0 API with the new URL as the identifier, authorize your application to access it, and reconnect the Claude connector
 - The local HTTPS cert (`*.pem`) is gitignored — each developer must generate their own with `mkcert`
-- `/authorize` and `/token` on this server are proxies to Auth0; this is required because the claude.ai connector constructs OAuth endpoints relative to the MCP server URL rather than discovering them from Auth0 directly
