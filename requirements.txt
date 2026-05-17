@@ -1,0 +1,4 @@
+mcp[cli]
+PyJWT
+cryptography
+uvicorn[standard]
