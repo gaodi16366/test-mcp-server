@@ -51,16 +51,10 @@ def _unauthorized() -> Response:
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
-    _public_paths = {
-        "/.well-known/oauth-protected-resource",
-        "/.well-known/oauth-authorization-server",
-        "/authorize",
-        "/token",
-        "/oauth/token",
-    }
+    _protected_paths = {"/mcp"}
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in self._public_paths:
+        if request.url.path not in self._protected_paths:
             return await call_next(request)
 
         auth = request.headers.get("Authorization", "")
