@@ -52,8 +52,8 @@ def validate_token(token: str) -> dict:
     )
 
 
-def _unauthorized(project_id: str) -> Response:
-    metadata_url = f"{SERVER_URL}/.well-known/oauth-protected-resource/{project_id}/mcp"
+def _unauthorized() -> Response:
+    metadata_url = f"{SERVER_URL}/.well-known/oauth-protected-resource"
     return Response(
         status_code=401,
         headers={"WWW-Authenticate": f'Bearer resource_metadata="{metadata_url}"'},
@@ -83,7 +83,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         auth = request.headers.get("Authorization", "")
         if not auth.startswith("Bearer "):
-            return _unauthorized(project_id)
+            return _unauthorized()
 
         try:
             claims = validate_token(auth.removeprefix("Bearer "))
@@ -92,7 +92,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
             _project_id.set(project_id)
         except Exception as e:
             logger.warning("token validation failed project=%s error=%s", project_id, e)
-            return _unauthorized(project_id)
+            return _unauthorized()
 
         return await call_next(request)
 
@@ -108,11 +108,10 @@ def add(a: float, b: float) -> float:
     return a + b
 
 
-
 async def oauth_protected_resource(request: Request) -> JSONResponse:
     return JSONResponse(
         {
-            "resource": AUDIENCE,
+            "resource": f"{SERVER_URL}/",
             "authorization_servers": [f"https://{AUTH0_DOMAIN}/"],
         }
     )
@@ -206,7 +205,7 @@ def create_app():
                 methods=["GET"],
             ),
             Route(
-                "/.well-known/oauth-protected-resource/{project_id}/mcp",
+                "/.well-known/oauth-protected-resource",
                 oauth_protected_resource,
                 methods=["GET"],
             ),

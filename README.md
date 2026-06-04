@@ -109,11 +109,35 @@ export $(cat .env | xargs)
 1. Go to **claude.ai → Settings → Connectors → Add connector**
 2. Set the MCP server URL to:
    ```
-   https://YOUR_NGROK_URL/mcp
+   https://YOUR_NGROK_URL/{project_id}/mcp
    ```
+   Replace `{project_id}` with any identifier for your project (e.g. `my-project`).
 3. Enter your Auth0 **Client ID** and **Client Secret**
 4. Click Connect — a browser window will open for login
 5. After login, the `add` tool will appear in Claude
+
+## OAuth Metadata Design
+
+The server exposes a single, project-agnostic OAuth protected resource metadata endpoint:
+
+```
+GET /.well-known/oauth-protected-resource
+```
+
+This returns:
+
+```json
+{
+  "resource": "https://YOUR_NGROK_URL/",
+  "authorization_servers": ["https://your-tenant.auth0.com/"]
+}
+```
+
+**Why a single global endpoint instead of per-project (`/.well-known/oauth-protected-resource/{project_id}/mcp`)?**
+
+RFC 9728 requires the `resource` field in the metadata response to match the URL from which the metadata was fetched (by reversing the well-known construction rule). A per-project well-known URL like `/.well-known/oauth-protected-resource/my-project/mcp` would require `resource` to be `https://server/my-project/mcp` — which in turn would need a separate Auth0 API registered per project.
+
+Since all projects share the same Auth0 tenant and the same API audience (`SERVER_URL/`), the protected resource is the server itself, not individual projects. The `project_id` in the MCP path is used purely for routing and identification — the OAuth authorization boundary is at the server level.
 
 ## Usage
 
